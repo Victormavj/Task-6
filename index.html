@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Cost Calculator</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <main class="calculator">
+        <h1>Service Cost Calculator</h1>
+        <form id="calculatorForm">
+            <label for="quantity">Quantity:</label>
+            <input type="number" id="quantity" name="quantity" min="1" value="1">
+
+            <fieldset>
+                <legend>Select a product:</legend>
+                <label class="choice"><input type="radio" name="product" value="basic" checked> Basic Service ($10 each)</label>
+                <label class="choice"><input type="radio" name="product" value="custom"> Custom Service ($15 each)</label>
+                <label class="choice"><input type="radio" name="product" value="gift"> Gift Service ($20 each)</label>
+            </fieldset>
+
+            <div id="radioOptions" class="extra-options" hidden>
+                <label for="serviceOption">Select an option:</label>
+                <select id="serviceOption" name="serviceOption">
+                    <option value="0">Standard (+$0.00 each)</option>
+                    <option value="5">Express (+$5.00 each)</option>
+                    <option value="8">Premium (+$8.00 each)</option>
+                </select>
+            </div>
+
+            <div id="checkboxOption" class="extra-options" hidden>
+                <label class="choice" for="giftWrap">
+                    <input type="checkbox" id="giftWrap" name="giftWrap" value="4">
+                    Gift wrapping (+$4.00 each)
+                </label>
+            </div>
+        </form>
+        <p id="result" aria-live="polite">Total cost: $10.00</p>
+    </main>
+</body>
+</html>
