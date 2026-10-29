@@ -1,49 +1,48 @@
 document.addEventListener("DOMContentLoaded", function () {
     const quantityInput = document.getElementById("quantity");
-    const productList = document.getElementById("productList");
+    const productTypeSelect = document.getElementById("productType");
     const radioOptions = document.getElementById("radioOptions");
-    const serviceOption = document.getElementById("serviceOption");
-    const checkboxOption = document.getElementById("checkboxOption");
-    const propertyOption = document.getElementById("propertyOption");
+    const radioList = document.getElementById("radioList");
+    const propertyOptions = document.getElementById("propertyOptions");
+    const propertyList = document.getElementById("propertyList");
     const result = document.getElementById("result");
-    let products = [];
+    const productsData = '[{"id":"basic","name":"Basic Service","price":10,"options":[],"property":null},{"id":"custom","name":"Custom Service","price":15,"options":[{"id":"standard","name":"Standard","price":0},{"id":"express","name":"Express","price":5},{"id":"premium","name":"Premium","price":8}],"property":null},{"id":"gift","name":"Gift Service","price":20,"options":[],"property":{"id":"wrapping","name":"Gift wrapping","price":4}}]';
+    const products = JSON.parse(productsData);
 
-    function createProductInputs() {
-        products.forEach(function (product, index) {
+    function loadProducts() {
+        products.forEach(function (product) {
+            const option = document.createElement("option");
+            option.value = product.id;
+            option.textContent = product.name;
+            productTypeSelect.appendChild(option);
+        });
+
+        updateProductOptions();
+    }
+
+    function updateProductOptions() {
+        const selectedProduct = products.find(function (product) {
+            return product.id === productTypeSelect.value;
+        });
+
+        radioList.textContent = "";
+        propertyList.textContent = "";
+        radioOptions.hidden = selectedProduct.options.length === 0;
+        propertyOptions.hidden = selectedProduct.property === null;
+
+        selectedProduct.options.forEach(function (productOption, index) {
             const label = document.createElement("label");
             const radio = document.createElement("input");
 
             label.classList.add("choice");
             radio.type = "radio";
-            radio.name = "product";
-            radio.value = product.id;
+            radio.name = "productOption";
+            radio.value = productOption.id;
             radio.checked = index === 0;
             label.appendChild(radio);
-            label.appendChild(document.createTextNode(" " + product.name + " ($" + product.price.toFixed(2) + " each)"));
-            productList.appendChild(label);
-
-            radio.addEventListener("change", updateOptionsAndPrice);
-        });
-
-        updateOptionsAndPrice();
-    }
-
-    function updateOptionsAndPrice() {
-        const selectedId = document.querySelector('input[name="product"]:checked').value;
-        const selectedProduct = products.find(function (product) {
-            return product.id === selectedId;
-        });
-
-        serviceOption.textContent = "";
-        propertyOption.textContent = "";
-        radioOptions.hidden = selectedProduct.options.length === 0;
-        checkboxOption.hidden = selectedProduct.property === null;
-
-        selectedProduct.options.forEach(function (option) {
-            const optionElement = document.createElement("option");
-            optionElement.value = option.price;
-            optionElement.textContent = option.name + " (+$" + option.price.toFixed(2) + " each)";
-            serviceOption.appendChild(optionElement);
+            label.appendChild(document.createTextNode(" " + productOption.name + " (+$" + productOption.price.toFixed(2) + " each)"));
+            radioList.appendChild(label);
+            radio.addEventListener("change", updatePrice);
         });
 
         if (selectedProduct.property !== null) {
@@ -52,11 +51,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
             label.classList.add("choice");
             checkbox.type = "checkbox";
-            checkbox.id = "productProperty";
-            checkbox.value = selectedProduct.property.price;
+            checkbox.name = "productProperty";
+            checkbox.value = selectedProduct.property.id;
             label.appendChild(checkbox);
             label.appendChild(document.createTextNode(" " + selectedProduct.property.name + " (+$" + selectedProduct.property.price.toFixed(2) + " each)"));
-            propertyOption.appendChild(label);
+            propertyList.appendChild(label);
             checkbox.addEventListener("change", updatePrice);
         }
 
@@ -64,20 +63,23 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function updatePrice() {
-        const selectedId = document.querySelector('input[name="product"]:checked').value;
         const selectedProduct = products.find(function (product) {
-            return product.id === selectedId;
+            return product.id === productTypeSelect.value;
         });
         const quantity = parseInt(quantityInput.value, 10);
         let unitPrice = selectedProduct.price;
 
-        if (selectedProduct.options.length > 0) {
-            unitPrice += parseFloat(serviceOption.value);
+        const selectedOption = document.querySelector('input[name="productOption"]:checked');
+        if (selectedOption !== null) {
+            const productOption = selectedProduct.options.find(function (option) {
+                return option.id === selectedOption.value;
+            });
+            unitPrice += productOption.price;
         }
 
-        const checkbox = document.getElementById("productProperty");
-        if (checkbox !== null && checkbox.checked) {
-            unitPrice += parseFloat(checkbox.value);
+        const selectedProperty = document.querySelector('input[name="productProperty"]:checked');
+        if (selectedProperty !== null && selectedProduct.property !== null) {
+            unitPrice += selectedProduct.property.price;
         }
 
         if (Number.isNaN(quantity) || quantity < 1) {
@@ -89,20 +91,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     quantityInput.addEventListener("input", updatePrice);
-    serviceOption.addEventListener("change", updatePrice);
+    productTypeSelect.addEventListener("change", updateProductOptions);
 
-    fetch("products.json")
-        .then(function (response) {
-            if (!response.ok) {
-                throw new Error("Could not load product data.");
-            }
-            return response.json();
-        })
-        .then(function (data) {
-            products = data;
-            createProductInputs();
-        })
-        .catch(function () {
-            result.textContent = "Could not load products. Please open this page using a local web server.";
-        });
+    loadProducts();
 });
+
